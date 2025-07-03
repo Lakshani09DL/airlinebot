@@ -5,7 +5,7 @@ from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnableSequence
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-# Set the environment variable for Gemini
+
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 # Initialize Gemini LLM
@@ -100,7 +100,7 @@ async def run_bot(user_input: str) -> str:
     else:
         return "Sorry, I didn't understand your request. Please ask about flight status, baggage, bookings, or complaints."
 
-# 5. Run interactively
+
 async def main():
     print("✈️ Airline Assistant (Type 'exit' to quit)")
     while True:
@@ -109,6 +109,16 @@ async def main():
             break
         response = await run_bot(query)
         print("Bot:", response)
+
+async def handle_query_gradio(user_input: str) -> str:
+    intent_msg = await router_chain.ainvoke({"input": user_input})
+    intent = intent_msg.content.strip().lower()
+
+    if intent in intent_chains:
+        response_msg = await intent_chains[intent].ainvoke({"input": user_input})
+        return response_msg.content.strip()
+    else:
+        return "Sorry, I couldn't understand your request. Please ask about flight status, baggage, bookings, or complaints."
 
 if __name__ == "__main__":
     asyncio.run(main())
